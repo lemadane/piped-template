@@ -1,0 +1,29 @@
+plugins {
+    id 'java-library'
+    id 'application'
+}
+
+group = 'com.piped'
+version = '0.1.0'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+application {
+    mainClass = 'com.piped.template.Main'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+}
+
+tasks.test {
+    useJUnitPlatform()
+}
