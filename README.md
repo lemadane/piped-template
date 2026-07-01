@@ -1,8 +1,8 @@
 # Piped Template Engine
 
-**Piped Template Engine**, or simply **Piped**, is a lightweight Java template engine that uses pipe-based syntax for server-side HTML rendering.
+**Piped Template Engine**, or simply **PTE**, is a lightweight Java template engine that uses pipe-based syntax for server-side HTML rendering.
 
-The goal of Piped is to provide a simple, readable, safe-by-default, and HTMX-friendly template engine for Java MVC applications.
+The goal of PTE is to provide a simple, readable, safe-by-default, and HTMX-friendly template engine for Java MVC applications.
 
 ```html
 <h1>|title|</h1>
@@ -26,11 +26,11 @@ Feature 6: Include and partial rendering
 Feature 7: Optional chaining and fallback
 ```
 
-## Why Piped?
+## Why PTE?
 
 Most Java template engines are powerful, but some can feel verbose for small MVC and HTMX-style applications.
 
-Piped is designed to be:
+PTE is designed to be:
 
 ```txt
 Simple
@@ -154,7 +154,7 @@ class="|attr className|"
 |/if|
 ```
 
-Piped uses readable word-based boolean operators instead of symbolic C-style operators.
+PTE uses readable word-based boolean operators instead of symbolic C-style operators.
 
 ```html
 |if not user|
@@ -176,7 +176,7 @@ Piped uses readable word-based boolean operators instead of symbolic C-style ope
 
 ## Boolean Operators
 
-Piped supports these word-based boolean operators:
+PTE supports these word-based boolean operators:
 
 ```txt
 not
@@ -258,7 +258,7 @@ not (user.isAdmin or user.isManager)
 
 ## Comparison Operators
 
-Piped expressions should support these comparison operators:
+PTE expressions should support these comparison operators:
 
 ```txt
 ==
@@ -303,7 +303,7 @@ The optional `|else|` block renders when the collection is empty or missing.
 
 ## Each Metadata
 
-Inside an `each` block, Piped should expose **each metadata**.
+Inside an `each` block, PTE should expose **each metadata**.
 
 Official syntax:
 
@@ -341,7 +341,7 @@ Example:
 </table>
 ```
 
-## Piped support map looping separately from list looping.
+## PTE support map looping separately from list looping.
 
 This is the official syntax:
 
@@ -406,7 +406,7 @@ Each metadata should still work:
 
 So inside a map loop, we have:
 
-```doc
+```txt
 key          current map key
 value        current map value
 each.index   1-based index
@@ -448,7 +448,7 @@ We also support this:
 
 This maps naturally to Java’s Map.Entry.
 
-Piped rule
+PTE rule
 
 For collections:
 ```html
@@ -471,7 +471,7 @@ Important Java note: if output order matters, pass a LinkedHashMap, not a plain 
 
 ## Switch Rendering
 
-Piped supports `|switch expr|` for multi-branch rendering.
+PTE supports `|switch expr|` for multi-branch rendering.
 
 Basic example:
 
@@ -511,7 +511,7 @@ If no case matches, the optional `default` block is rendered:
 
 ## Switch Does Not Fall Through by Default
 
-Piped switch cases automatically break by default.
+PTE switch cases automatically break by default.
 
 That means this:
 
@@ -599,7 +599,7 @@ Switch syntax summary:
 
 ## Include and Partial Rendering
 
-Piped uses `|include expr|` to render another template or partial.
+PTE uses `|include expr|` to render another template or partial.
 
 ```html
 |include partials/header|
@@ -613,7 +613,7 @@ Piped uses `|include expr|` to render another template or partial.
 
 `|include expr|` is the official include syntax.
 
-Piped intentionally avoids:
+PTE intentionally avoids:
 
 ```html
 |partial expr|
@@ -654,7 +654,7 @@ instead of:
 
 ## Optional Chaining and Fallback
 
-Piped should support optional chaining with `?.`.
+PTE should support optional chaining with `?.`.
 
 ```html
 <p>Hello, |user?.profile?.displayName|</p>
@@ -662,7 +662,7 @@ Piped should support optional chaining with `?.`.
 
 If `user` or `profile` is missing, the expression returns nothing instead of throwing.
 
-Piped should also support fallback with `??`.
+PTE should also support fallback with `??`.
 
 ```html
 <p>Hello, |user?.profile?.displayName ?? "Guest"|</p>
@@ -684,7 +684,7 @@ Otherwise use "Walk-in Customer".
 
 ## Design Rules
 
-Piped follows these design decisions:
+PTE follows these design decisions:
 
 ```txt
 |expr|              escaped HTML output
@@ -757,7 +757,7 @@ At the beginning, the engine starts with a simple render method:
 TemplateEngine engine = new TemplateEngine();
 
 String html = engine.render(
-    "<h1>Hello Piped</h1>",
+    "<h1>Hello PTE</h1>",
     Map.of()
 );
 
@@ -767,7 +767,7 @@ System.out.println(html);
 Output:
 
 ```html
-<h1>Hello Piped</h1>
+<h1>Hello PTE</h1>
 ```
 
 After Feature 1, this will be supported:
@@ -809,7 +809,7 @@ String html = engine.render(
         "post", Map.of(
             "title", "Building Piped Template Engine",
             "author", Map.of("name", "Lemuel Adane"),
-            "bodyHtml", "<p>Piped is a <strong>server-side</strong> template engine.</p>"
+            "bodyHtml", "<p>PTE is a <strong>server-side</strong> template engine.</p>"
         )
     )
 );
@@ -832,7 +832,7 @@ Expected output:
 
 ## Partial Rendering Goal
 
-Piped should support rendering full pages and partial fragments.
+PTE should support rendering full pages and partial fragments.
 
 Full page rendering:
 
@@ -846,12 +846,12 @@ Partial rendering:
 String html = engine.renderPartial("partials/product-card", product);
 ```
 
-This makes Piped useful for HTMX applications.
+This makes PTE useful for HTMX applications.
 
-Piped renders the HTML fragment on the server. HTMX can then request that fragment and swap it into the existing page.
+PTE renders the HTML fragment on the server. HTMX can then request that fragment and swap it into the existing page.
 
 ```txt
-Piped  = creates HTML
+PTE  = creates HTML
 HTMX = requests and swaps HTML
 ```
 
@@ -877,12 +877,12 @@ Block comment:
 #|
 ```
 
-This makes Piped useful for HTMX applications.
+This makes PTE useful for HTMX applications.
 
-Piped renders the HTML fragment on the server. HTMX can then request that fragment and swap it into the existing page.
+PTE renders the HTML fragment on the server. HTMX can then request that fragment and swap it into the existing page.
 
 ```txt
-Piped  = creates HTML
+PTE  = creates HTML
 HTMX = requests and swaps HTML
 ```
 
@@ -1077,7 +1077,7 @@ com.piped.template.loader
 
 ## Philosophy
 
-Piped should stay small and understandable.
+PTE is small and understandable.
 
 Core principles:
 
