@@ -1,13 +1,38 @@
+# Gradle
 .gradle/
 build/
-out/
 
+# Java compiled files
 *.class
+
+# Logs
 *.log
 
+# IDEs / editors
 .idea/
 .vscode/
 *.iml
 
+# OS files
 .DS_Store
 Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Generated archives
+*.jar
+*.war
+*.ear
+
+# Test / coverage reports
+reports/
+coverage/

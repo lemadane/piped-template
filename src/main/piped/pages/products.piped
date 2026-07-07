@@ -1,0 +1,24 @@
+|layout layouts/main|
+|section title|
+   Products - PTE Demo
+|/section|
+|section content|
+   |component components/card|
+      |slot title|
+         Product List
+      |/slot|
+
+      |slot body|
+         <ul>
+         |each product in products|
+            |include partials/product-card with product|
+         |else|
+            <li>No products found.</li>
+         |/each|
+         </ul>
+      |/slot|
+      |slot actions|
+         <a href="/products/new">Add Product</a>
+      |/slot|
+   |/component|
+|/section|
