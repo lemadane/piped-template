@@ -26,6 +26,10 @@ Implemented and covered:
 (done) Attribute-safe output
 (done) URL-safe output
 (done) JSON-safe output
+(done) Conditional output expressions
+(done) Conditional attribute shorthand
+(done) Conditional attribute assignment
+(done) Conditional attribute whitespace cleanup
 (done) Comments
 (done) If / else-if / else conditionals
 (done) Truthy/falsy evaluation
@@ -45,20 +49,21 @@ Implemented and covered:
 (done) Components and named slots
 (done) Comma filters
 (done) Date and time filters
+(done) .pte file extension
+(done) src/main/pte template folder
+(done) Unit test coverage for current core features
 ```
 
 Still planned:
 
 ```txt
-(pending) Automatic whitespace cleanup
 (pending) Better error messages with line/column
 (pending) Template caching
 (pending) Custom user-defined filters
 (pending) Builder/config API
-(pending) Optional .piped.html extension support
 (pending) Spring Boot MVC integration
 (pending) HTMX controller demo
-(pending) Unit and integration test coverage
+(pending) Integration test coverage
 (pending) Internal tokenizer/parser/AST refactor
 ```
 
@@ -100,7 +105,7 @@ Output:
 ### Render a file-based page
 
 ```java
-TemplateEngine engine = new TemplateEngine(Path.of("src/main/templates"));
+TemplateEngine engine = new TemplateEngine(Path.of("src/main/pte"));
 
 String html = engine.render("pages/products", model);
 ```
@@ -108,13 +113,13 @@ String html = engine.render("pages/products", model);
 This loads:
 
 ```txt
-src/main/piped/pages/products.piped
+src/main/pte/pages/products.pte
 ```
 
 ### Render a partial
 
 ```java
-TemplateEngine engine = new TemplateEngine(Path.of("src/main/piped"));
+TemplateEngine engine = new TemplateEngine(Path.of("src/main/pte"));
 
 String html = engine.renderPartial("partials/product-card", product);
 ```
@@ -122,7 +127,7 @@ String html = engine.renderPartial("partials/product-card", product);
 This loads:
 
 ```txt
-src/main/piped/partials/product-card.piped
+src/main/pte/partials/product-card.pte
 ```
 
 This is useful for HTMX-style responses.
@@ -132,17 +137,17 @@ This is useful for HTMX-style responses.
 ## Recommended Template Structure
 
 ```txt
-src/main/piped/
+src/main/pte/
   layouts/
-    main.piped
+    main.pte
   pages/
-    products.piped
+    products.pte
   partials/
-    header.piped
-    footer.piped
-    product-card.piped
+    header.pte
+    footer.pte
+    product-card.pte
   components/
-    card.piped
+    card.pte
 ```
 
 ---
@@ -234,6 +239,137 @@ Useful for JavaScript and AlpineJS:
 <div x-data='|json alpineData|'>
    Product data is available.
 </div>
+```
+
+---
+
+## Conditional Output Expressions
+
+PTE supports inline conditional output:
+
+```html
+|expr if condition|
+|expr if not condition|
+```
+
+Examples:
+
+```html
+<p>|user.name if user.active|</p>
+<p>|user.name if not user.deleted|</p>
+```
+
+If the condition is false, the output renders nothing.
+
+This is equivalent to:
+
+```html
+|if condition|
+   |expr|
+|/if|
+```
+
+Conditional output works with every output mode:
+
+```html
+|attr value if condition|
+|html value if condition|
+|url value if condition|
+|json value if condition|
+
+|attr value if not condition|
+|html value if not condition|
+|url value if not condition|
+|json value if not condition|
+```
+
+Examples:
+
+```html
+|html article.body if article.published|
+|url query if query|
+|json product if product.visible|
+```
+
+---
+
+## Conditional Attributes
+
+PTE supports clean conditional HTML attributes:
+
+```html
+<button |attr disabled if saving|>Save</button>
+<button |attr disabled if not enabled|>Save</button>
+<div |attr hidden if not form.hasErrors|>No errors</div>
+```
+
+Rendered when true:
+
+```html
+<button disabled>Save</button>
+<div hidden>No errors</div>
+```
+
+Rendered when false:
+
+```html
+<button>Save</button>
+<div>No errors</div>
+```
+
+PTE removes the extra whitespace left behind by skipped conditional attributes.
+
+### Supported conditional attribute literals
+
+```txt
+allowfullscreen
+async
+autofocus
+autoplay
+checked
+controls
+default
+defer
+disabled
+formnovalidate
+hidden
+inert
+ismap
+itemscope
+loop
+multiple
+muted
+nomodule
+novalidate
+open
+playsinline
+readonly
+required
+reversed
+selected
+aria-current
+```
+
+### Attribute assignment
+
+For attributes that need a value, use assignment syntax:
+
+```html
+<a |attr aria-current='page' if route == 'dashboard'|>Dashboard</a>
+<input |attr aria-label=label if label|>
+<div |attr data-status=status if status|></div>
+```
+
+Rendered:
+
+```html
+<a aria-current="page">Dashboard</a>
+```
+
+Skipped:
+
+```html
+<a>Dashboard</a>
 ```
 
 ---
@@ -466,6 +602,14 @@ The optional `|else|` block renders when the collection is empty or missing.
 
 If output order matters, pass a `LinkedHashMap`.
 
+### Map entry loop
+
+```html
+|each entry in settings|
+   <p>|entry.key| = |entry.value|</p>
+|/each|
+```
+
 ---
 
 ## Each Metadata
@@ -565,7 +709,7 @@ Use `|fallthrough|` for explicit fallthrough:
 |/each|
 ```
 
-`partials/product-card.piped`:
+`partials/product-card.pte`:
 
 ```html
 <li class="product-card">
@@ -699,7 +843,7 @@ Supported syntax:
 ```txt
 |component template-name|
 |slot name| ... |/slot|   defines slot content
-|slot name|               renders slot content inside a component
+|slot name|               renders slot content inside component
 |/component|
 ```
 
@@ -848,55 +992,97 @@ return html;
 
 ---
 
+## VS Code Setup
+
+Use this project setting so VS Code treats `.pte` files as HTML:
+
+```json
+{
+  "files.associations": {
+    "*.pte": "html"
+  },
+  "emmet.includeLanguages": {
+    "pte": "html",
+    "html": "html"
+  },
+  "editor.quickSuggestions": {
+    "strings": true
+  }
+}
+```
+
+Recommended files:
+
+```txt
+.vscode/
+  settings.json
+  extensions.json
+  pte.code-snippets
+```
+
+---
+
 ## Official Syntax Summary
 
 ```txt
-|expr|                         HTML-escaped output
-|html expr|                    trusted HTML output
-|attr expr|                    attribute-safe output
-|url expr|                     URL-safe output
-|json expr|                    JSON-safe output
+|expr|                                  HTML-escaped output
+|html expr|                             trusted HTML output
+|attr expr|                             attribute-safe output
+|url expr|                              URL-safe output
+|json expr|                             JSON-safe output
 
-|if expr|                      starts conditional block
-|else-if expr|                 else-if branch
-|else|                         else branch
-|/if|                          closes if block
+|expr if condition|                     conditional HTML-escaped output
+|expr if not condition|                 conditional HTML-escaped output with negated condition
+|attr expr if condition|                conditional attribute output
+|attr expr if not condition|            conditional attribute output with negated condition
+|html expr if condition|                conditional trusted HTML output
+|url expr if condition|                 conditional URL output
+|json expr if condition|                conditional JSON output
 
-|each item in items|           loops over collection
-|each key, value in map|       loops over map
-|/each|                        closes each block
+|attr disabled if saving|               conditional boolean attribute
+|attr hidden if not form.hasErrors|     conditional boolean attribute with negated condition
+|attr aria-current='page' if active|    conditional attribute assignment
 
-|switch expr|                  starts switch block
-|case value|                   case branch
-|default|                      default branch
-|fallthrough|                  explicit switch fallthrough
-|/switch|                      closes switch block
+|if expr|                               starts conditional block
+|else-if expr|                          else-if branch
+|else|                                  else branch
+|/if|                                   closes if block
 
-|include template|             includes template with current context
-|include template with expr|   includes template with custom context
+|each item in items|                    loops over collection
+|each key, value in map|                loops over map
+|/each|                                 closes each block
 
-|layout template|              page layout directive
-|section name|                 starts section block
-|/section|                     closes section block
-|yield name|                   renders section inside layout
+|switch expr|                           starts switch block
+|case value|                            case branch
+|default|                               default branch
+|fallthrough|                           explicit switch fallthrough
+|/switch|                               closes switch block
 
-|component template|           starts component block
-|slot name| ... |/slot|        defines slot content
-|slot name|                    renders slot content inside component
-|/component|                   closes component block
+|include template|                      includes template with current context
+|include template with expr|            includes template with custom context
 
-|# comment |                   single-line comment
-|# ... #|                      block comment
+|layout template|                       page layout directive
+|section name|                          starts section block
+|/section|                              closes section block
+|yield name|                            renders section inside layout
 
-not                            boolean NOT
-and                            boolean AND
-or                             boolean OR
-nand                           boolean NAND
-nor                            boolean NOR
-?.                             optional chaining
-??                             null fallback
-? :                            ternary operator
-, filter                       filter pipeline
+|component template|                    starts component block
+|slot name| ... |/slot|                 defines slot content
+|slot name|                             renders slot content inside component
+|/component|                            closes component block
+
+|# comment |                            single-line comment
+|# ... #|                               block comment
+
+not                                     boolean NOT
+and                                     boolean AND
+or                                      boolean OR
+nand                                    boolean NAND
+nor                                     boolean NOR
+?.                                      optional chaining
+??                                      null fallback
+? :                                     ternary operator
+, filter                                filter pipeline
 ```
 
 Avoided syntax:
@@ -922,36 +1108,44 @@ piped-template-engine-java/
   build.gradle
   README.md
   .gitignore
+  .vscode/
+    settings.json
+    extensions.json
+    pte.code-snippets
   src/
     main/
       java/
         com/
           piped/
             template/
-              TemplateEngine.java
-              Main.java
-              escape/
-              exceptions/
-              expression/
-              metadata/
-              parsers/
-              statements/
-      piped/
+              engine/
+                TemplateEngine.java
+                Main.java
+                escape/
+                exceptions/
+                expression/
+                metadata/
+                parsers/
+                statements/
+      pte/
         layouts/
-          main.piped
+          main.pte
         pages/
-          products.piped
+          products.pte
         partials/
-          header.piped
-          footer.piped
-          product-card.piped
+          header.pte
+          footer.pte
+          product-card.pte
         components/
-          card.piped
+          card.pte
     test/
       java/
         com/
           piped/
             template/
+              engine/
+                ConditionalOutputTest.java
+                TemplateEngineOutputTest.java
 ```
 
 ---
@@ -970,6 +1164,12 @@ Run clean test:
 ./gradlew clean test
 ```
 
+Run one test class:
+
+```bash
+./gradlew :test --tests "com.piped.template.engine.ConditionalOutputTest" --rerun-tasks --no-build-cache --no-configuration-cache --console=plain
+```
+
 Run the demo:
 
 ```bash
@@ -983,13 +1183,11 @@ Run the demo:
 ### Near-term
 
 ```txt
-Automatic whitespace cleanup
 Better error messages with line/column
 Template caching
 Custom user-defined filters
 Builder/config API
-Optional .piped.html extension support
-Unit and integration tests
+Integration tests
 ```
 
 ### Integration
@@ -1036,6 +1234,7 @@ No arbitrary Java method execution in templates
 Framework-independent core
 HTMX-friendly partial rendering
 Reusable layouts and components
+Clean conditional attributes
 ```
 
 ---
