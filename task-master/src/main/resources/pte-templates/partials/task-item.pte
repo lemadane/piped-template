@@ -1,4 +1,4 @@
-<li class="task-item is-flex is-align-items-center is-justify-content-space-between |it.completed ? 'completed' : ''|" id="task-|it.id|">
+<li class="task-item is-flex is-align-items-center is-justify-content-space-between |'completed' if it.completed|" id="task-|it.id|">
     <div class="task-left" hx-post="/tasks/|it.id|/toggle" hx-target="#todo-content" hx-swap="innerHTML">
         <label class="checkbox-wrapper">
             <input type="checkbox" |attr checked if it.completed|>
@@ -6,7 +6,7 @@
         </label>
         <span class="task-title">|it.title|</span>
     </div>
-    <button class="btn-delete" hx-delete="/tasks/|it.id|" hx-target="#todo-content" hx-swap="innerHTML">
+    <button class="btn-delete" hx-delete="/tasks/|url it.id|" hx-target="#todo-content" hx-swap="innerHTML">
         <i class="material-icons">delete</i>
     </button>
 </li>

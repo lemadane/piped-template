@@ -8,8 +8,8 @@
 <div class="box material-card">
     <!-- Header -->
     <div class="has-text-centered mb-5">
-        <h1 class="title is-3 app-title mb-2">TaskMaster</h1>
-        <p class="subtitle is-6 app-subtitle">A high-performance TODO app powered by Piped & Spring Boot</p>
+        <h1 class="title is-3 app-title mb-2">Task Master</h1>
+        <p class="subtitle is-6 app-subtitle">A high-performance TODO app powered by Piped Template Engine<br/>& Spring Boot</p>
     </div>
 
     <!-- Wrapper for dynamic content (Stats + Task List) -->
