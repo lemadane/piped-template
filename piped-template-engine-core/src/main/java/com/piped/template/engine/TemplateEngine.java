@@ -127,6 +127,11 @@ public final class TemplateEngine {
         return templateCache.computeIfAbsent(template, source -> parser.parse(lexer.tokenize(source)));
     }
 
+    public com.piped.template.engine.compiler.CompiledTemplate compileTemplate(String templateOrTemplateName) {
+        String source = loadTemplateSource(templateOrTemplateName);
+        return compile(source);
+    }
+
     public com.piped.template.engine.codegen.CompiledTemplateExecutable compileToBytecode(String template) {
         if (!com.piped.template.engine.codegen.InMemoryBytecodeCompiler.isAvailable()) {
             return (context, writer, engine) -> compile(template).render(context, writer);

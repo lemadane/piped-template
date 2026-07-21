@@ -411,3 +411,30 @@ Write developer comments inside templates that are completely stripped out at co
    It spans multiple lines.
 #|
 ```
+
+---
+
+### 25. Route-Level Page Options & Metadata
+Configure route-level page properties (`title`, `cache`, `auth`, `roles`, `contentType`) directly inside the template. The Spring Boot starter automatically resolves and enforces these configurations.
+
+```html
+|page title = "System Settings"|
+|page cache = "public, max-age=3600"|
+|page auth = true|
+|page roles = ["ADMIN"]|
+|page contentType = "text/html;charset=UTF-8"|
+
+<h1>Settings Page</h1>
+```
+
+---
+
+### 26. Request-Scoped Page Context
+Access implicit HTTP request metadata properties (`requestUri`, `method`, `headers`, `params`, `session`) out-of-the-box inside any layout page using the `page` context map.
+
+```html
+<!-- Highlight active tab depending on the request URI -->
+<nav>
+    <a href="/settings" class="|page.requestUri == '/settings' ? 'active' : ''|">Settings</a>
+</nav>
+```

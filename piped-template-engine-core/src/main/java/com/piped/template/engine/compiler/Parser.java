@@ -15,11 +15,15 @@ import java.util.List;
 public final class Parser {
     private final OutputExpressionParser outputExpressionParser = new OutputExpressionParser();
     private final ExpressionEvaluator evaluator = new ExpressionEvaluator();
+    private final ThreadLocal<java.util.Map<String, Object>> threadLocalMetadata = ThreadLocal.withInitial(java.util.HashMap::new);
 
     public CompiledTemplate parse(List<Token> tokens) {
         Cursor cursor = new Cursor(tokens);
+        threadLocalMetadata.get().clear();
         BlockNode root = parseBlock(cursor, null);
-        return new CompiledTemplate(root);
+        java.util.Map<String, Object> metadata = new java.util.HashMap<>(threadLocalMetadata.get());
+        threadLocalMetadata.get().clear();
+        return new CompiledTemplate(root, metadata);
     }
 
     private BlockNode parseBlock(Cursor cursor, TokenType stopToken) {
@@ -65,6 +69,7 @@ public final class Parser {
                 }
                 case FRAGMENT -> nodes.add(parseFragment(token, cursor));
                 case MINIFY -> nodes.add(parseMinify(token, cursor));
+                case PAGE -> parsePageMetadata(token);
                 default -> {
                     var outputExpr = outputExpressionParser.parse(token.value());
                     nodes.add(new ExpressionNode(outputExpr, evaluator));
@@ -216,6 +221,53 @@ public final class Parser {
             cursor.next();
         }
         return new com.piped.template.engine.ast.MinifyNode(body);
+    }
+
+    private void parsePageMetadata(Token token) {
+        String val = token.value().substring("page ".length()).trim();
+        int eqIndex = val.indexOf('=');
+        if (eqIndex != -1) {
+            String key = val.substring(0, eqIndex).trim();
+            String valueStr = val.substring(eqIndex + 1).trim();
+            Object value = parseMetadataValue(valueStr);
+            threadLocalMetadata.get().put(key, value);
+        }
+    }
+
+    private Object parseMetadataValue(String str) {
+        if (str.startsWith("\"") && str.endsWith("\"")) {
+            return str.substring(1, str.length() - 1);
+        }
+        if (str.startsWith("'") && str.endsWith("'")) {
+            return str.substring(1, str.length() - 1);
+        }
+        if ("true".equalsIgnoreCase(str)) {
+            return Boolean.TRUE;
+        }
+        if ("false".equalsIgnoreCase(str)) {
+            return Boolean.FALSE;
+        }
+        if (str.startsWith("[") && str.endsWith("]")) {
+            String inner = str.substring(1, str.length() - 1).trim();
+            if (inner.isEmpty()) {
+                return List.of();
+            }
+            List<String> items = new ArrayList<>();
+            for (String item : inner.split(",")) {
+                String trimmed = item.trim();
+                if ((trimmed.startsWith("\"") && trimmed.endsWith("\"")) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+                    trimmed = trimmed.substring(1, trimmed.length() - 1);
+                }
+                items.add(trimmed);
+            }
+            return items;
+        }
+        try {
+            return Integer.parseInt(str);
+        } catch (NumberFormatException e) {
+            // Ignore
+        }
+        return str;
     }
 
     private static class Cursor {

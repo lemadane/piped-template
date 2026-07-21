@@ -1,6 +1,8 @@
 package com.piped.template.engine.spring.routing;
 
 import com.piped.template.engine.TemplateEngine;
+import com.piped.template.engine.compiler.CompiledTemplate;
+import com.piped.template.engine.spring.PipedPageContext;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.web.HttpRequestHandler;
@@ -60,12 +62,46 @@ public class PipedFileRouteHandlerMapping extends AbstractUrlHandlerMapping {
         return path.isEmpty() ? "/" : path;
     }
 
+    @SuppressWarnings("unchecked")
     private void registerFileRoute(String urlPattern, String relativePath, Resource resource) {
         HttpRequestHandler handler = (request, response) -> {
             try {
+                String templateContent = new String(resource.getInputStream().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+                CompiledTemplate compiled = templateEngine.compile(templateContent);
+                Map<String, Object> metadata = compiled.getMetadata();
+
+                // Enforce auth check
+                if (Boolean.TRUE.equals(metadata.get("auth"))) {
+                    if (request.getUserPrincipal() == null) {
+                        response.sendError(401, "Unauthorized");
+                        return;
+                    }
+                }
+
+                // Enforce roles check
+                if (metadata.containsKey("roles")) {
+                    Object rolesObj = metadata.get("roles");
+                    List<String> requiredRoles;
+                    if (rolesObj instanceof List) {
+                        requiredRoles = (List<String>) rolesObj;
+                    } else {
+                        requiredRoles = List.of(String.valueOf(rolesObj));
+                    }
+                    boolean hasRole = false;
+                    for (String role : requiredRoles) {
+                        if (request.isUserInRole(role)) {
+                            hasRole = true;
+                            break;
+                        }
+                    }
+                    if (!hasRole) {
+                        response.sendError(403, "Forbidden");
+                        return;
+                    }
+                }
+
                 Map<String, Object> model = new HashMap<>();
 
-                @SuppressWarnings("unchecked")
                 Map<String, String> pathVars = (Map<String, String>) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
                 if (pathVars != null) {
                     model.putAll(pathVars);
@@ -85,10 +121,26 @@ public class PipedFileRouteHandlerMapping extends AbstractUrlHandlerMapping {
                     }
                 }
 
-                String templateContent = new String(resource.getInputStream().readAllBytes());
-                String html = templateEngine.renderString(templateContent, model);
+                if (!model.containsKey("page")) {
+                    model.put("page", new PipedPageContext(request));
+                }
 
-                response.setContentType("text/html;charset=UTF-8");
+                if (metadata.containsKey("title") && !model.containsKey("title")) {
+                    model.put("title", metadata.get("title"));
+                }
+
+                // Apply custom Cache-Control header
+                if (metadata.containsKey("cache")) {
+                    response.setHeader("Cache-Control", String.valueOf(metadata.get("cache")));
+                }
+
+                // Apply custom Content-Type
+                String contentType = metadata.containsKey("contentType")
+                        ? String.valueOf(metadata.get("contentType"))
+                        : "text/html;charset=UTF-8";
+                response.setContentType(contentType);
+
+                String html = compiled.renderToString(new com.piped.template.engine.expression.TemplateContext(model));
                 response.getWriter().write(html);
             } catch (Exception e) {
                 response.sendError(500, e.getMessage());

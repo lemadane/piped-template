@@ -36,5 +36,6 @@ public enum TokenType {
     FRAGMENT,
     END_FRAGMENT,
     MINIFY,
-    END_MINIFY
+    END_MINIFY,
+    PAGE
 }

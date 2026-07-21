@@ -121,6 +121,8 @@ public final class Lexer {
             return TokenType.MINIFY;
         } else if ("/minify".equals(content)) {
             return TokenType.END_MINIFY;
+        } else if (content.startsWith("page ")) {
+            return TokenType.PAGE;
         }
         return TokenType.EXPRESSION;
     }
