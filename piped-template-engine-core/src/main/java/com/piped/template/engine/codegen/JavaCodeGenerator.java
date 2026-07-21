@@ -41,6 +41,15 @@ public final class JavaCodeGenerator {
             for (ASTNode child : blockNode.getChildren()) {
                 generateNodeSource(child, sb, indent);
             }
+        } else if (node instanceof com.piped.template.engine.ast.FieldNode fieldNode) {
+            sb.append(indent).append("new com.piped.template.engine.ast.FieldNode(")
+                    .append(escapeStringLiteral(fieldNode.getPropertyPath())).append(", new com.piped.template.engine.expression.ExpressionEvaluator()).render(context, writer);\n");
+        } else if (node instanceof com.piped.template.engine.ast.DisplayNode displayNode) {
+            sb.append(indent).append("new com.piped.template.engine.ast.DisplayNode(")
+                    .append(escapeStringLiteral(displayNode.getPropertyPath())).append(", new com.piped.template.engine.expression.ExpressionEvaluator()).render(context, writer);\n");
+        } else if (node instanceof com.piped.template.engine.ast.EditorNode editorNode) {
+            sb.append(indent).append("new com.piped.template.engine.ast.EditorNode(")
+                    .append(escapeStringLiteral(editorNode.getPropertyPath())).append(", new com.piped.template.engine.expression.ExpressionEvaluator()).render(context, writer);\n");
         }
     }
 

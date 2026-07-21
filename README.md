@@ -79,6 +79,19 @@ The `[id]` parameter is automatically available in your template:
 |name, upper|                <!-- Turns 'john' into 'JOHN' -->
 ```
 
+### 2. Strongly Typed Models & Form Field Binding
+```html
+<!-- Strongly Typed Model Contract -->
+|model com.example.model.CustomerEditPage|
+
+<!-- Automatic Form Field Binding (generates name, id, value, and validation error classes) -->
+<input |field model.form.email|>
+
+<!-- Type-Based Display and Editor Widgets -->
+|display model.customer.address|
+|editor model.form.email|
+```
+
 ### 2. Default Values & Optional Chaining
 ```html
 <!-- If user.profile is missing, fallback to 'Guest' -->

@@ -95,6 +95,14 @@ public final class Lexer {
             return TokenType.SLOT;
         } else if ("/slot".equals(content)) {
             return TokenType.END_SLOT;
+        } else if (content.startsWith("model ")) {
+            return TokenType.MODEL;
+        } else if (content.startsWith("field ")) {
+            return TokenType.FIELD;
+        } else if (content.startsWith("display ")) {
+            return TokenType.DISPLAY;
+        } else if (content.startsWith("editor ")) {
+            return TokenType.EDITOR;
         }
         return TokenType.EXPRESSION;
     }

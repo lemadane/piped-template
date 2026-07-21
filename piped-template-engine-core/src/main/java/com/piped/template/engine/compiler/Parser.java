@@ -47,6 +47,10 @@ public final class Parser {
                 }
                 case IF -> nodes.add(parseIf(token, cursor));
                 case EACH -> nodes.add(parseEach(token, cursor));
+                case MODEL -> nodes.add(new ModelNode(token.value().substring("model ".length()).trim()));
+                case FIELD -> nodes.add(new FieldNode(token.value().substring("field ".length()).trim(), evaluator));
+                case DISPLAY -> nodes.add(new DisplayNode(token.value().substring("display ".length()).trim(), evaluator));
+                case EDITOR -> nodes.add(new EditorNode(token.value().substring("editor ".length()).trim(), evaluator));
                 default -> {
                     var outputExpr = outputExpressionParser.parse(token.value());
                     nodes.add(new ExpressionNode(outputExpr, evaluator));

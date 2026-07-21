@@ -23,5 +23,9 @@ public enum TokenType {
     END_COMPONENT,
     SLOT,
     END_SLOT,
-    COMMENT
+    COMMENT,
+    MODEL,
+    FIELD,
+    DISPLAY,
+    EDITOR
 }
