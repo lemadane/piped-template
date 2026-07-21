@@ -4,32 +4,29 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Java 17+](https://img.shields.io/badge/Java-17%2B-blue.svg)](https://www.oracle.com/java/)
 
-**Piped Template Engine**, or **PTE**, is an HTMX-friendly, ultra-fast Java server-side template engine that uses readable pipe-based syntax (`|var|`) for HTML rendering.
+**Piped Template Engine (PTE)** is an ultra-fast, beginner-friendly HTML template engine for Java and Spring Boot. It lets you write clean HTML templates using simple pipes (`|variable|`) instead of complex tags.
 
 ```html
 <h1>|title|</h1>
-<p>Hello, |user?.profile?.displayName ?? 'Guest'|</p>
+<p>Hello, |user?.displayName ?? 'Guest'|</p>
 ```
 
-PTE features an **In-Memory Java Bytecode Compiler (CodeGen Engine)**, matching **JTE** in execution speed while operating **3x–8x faster than Thymeleaf** with zero disk I/O!
+---
+
+## ⚡ Why Use Piped Template Engine?
+
+- **🐣 Simple & Readable**: Write variables as `|name|` instead of complex syntax.
+- **🚀 Blazing Fast**: Compiles templates directly in RAM for native Java execution speed.
+- **📁 File-Based Routing**: Works like SvelteKit—just drop a `+page.pte` file into a folder to create a web route!
+- **🍃 Spring Boot Ready**: Seamless integration with Spring MVC.
+- **⚡ HTMX Friendly**: Perfect for modern, dynamic single-page interactions without heavy JavaScript.
+- **🛡️ Safe**: Automatically prevents XSS security vulnerabilities by default.
 
 ---
 
-## 🌟 Key Features
+## 📦 1. Installation
 
-- **🚀 JTE-Level Performance**: Transpiles template AST nodes into Java source code and compiles them **in-memory** to `.class` bytecode (`javax.tools.JavaCompiler`). Zero AST interpretation loops during render execution!
-- **📁 SvelteKit-Style File-Based Routing**: Zero-code routing via directory conventions (`pte-routes/+page.pte`, `[id]`, `@PageLoader`).
-- **🔗 Built-in Slug Generator**: Built-in `|title, slug|` pipe filter for SEO-friendly URLs and valid HTMX target DOM IDs.
-- **🍃 Spring Boot Starter**: Auto-configures `PipedTemplateViewResolver` and route handlers for Spring MVC.
-- **⚡ HTMX-Native**: Out-of-band swaps, dynamic partials, and clean slot/layout composition.
-- **🛡️ Safe by Default**: Automatic HTML escaping, attribute safety, JSON encoding, and URL encoding.
-- **📦 Multi-Module Architecture**: Core Engine, Spring Boot Starter, and TaskMaster demo app.
-
----
-
-## 📦 Installation
-
-Add **JitPack** to your `build.gradle` repositories and include the dependencies:
+Add **JitPack** to your `build.gradle` file:
 
 ```gradle
 repositories {
@@ -38,132 +35,69 @@ repositories {
 }
 
 dependencies {
-    // Spring Boot Starter (Includes Core Engine automatically):
+    // For Spring Boot applications:
     implementation 'com.github.lemadane.piped-template-engine:piped-template-engine-spring-boot-starter:v0.1.1'
-    
-    // Core Engine Standalone (Optional for non-Spring apps):
-    implementation 'com.github.lemadane.piped-template-engine:piped-template-engine-core:v0.1.1'
 }
 ```
 
 ---
 
-## ⚡ SvelteKit-Style File-Based Routing
+## 📁 2. File-Based Routing (SvelteKit-Style)
 
-Organize your page templates under `src/main/resources/pte-routes/`:
+You don't need to write Java controller classes just to display HTML pages! Just put your templates inside `src/main/resources/pte-routes/`:
 
+### Folder Structure
 ```txt
 src/main/resources/pte-routes/
-├── +page.pte              <-- Serves GET /
+├── +page.pte              <-- Automatically creates route: GET /
 ├── about/
-│   └── +page.pte          <-- Serves GET /about
+│   └── +page.pte          <-- Automatically creates route: GET /about
 └── tasks/
-    ├── +page.pte          <-- Serves GET /tasks
+    ├── +page.pte          <-- Automatically creates route: GET /tasks
     └── [id]/
-        └── +page.pte      <-- Serves GET /tasks/{id} (id auto-injected into template context)
+        └── +page.pte      <-- Automatically creates route: GET /tasks/{id}
 ```
 
-### Dynamic Route Example (`routes/tasks/[id]/+page.pte`)
+### Example: Dynamic Page (`routes/tasks/[id]/+page.pte`)
+The `[id]` parameter is automatically available in your template:
+
 ```html
-<div class="task-details">
+<div class="card">
     <h1>Task ID: |id|</h1>
-    <p>Title: |taskDetails?.title ?? 'Not Found'|</p>
 </div>
 ```
 
-### Optional Data Loader (`@PageLoader`)
-To load dynamic data before rendering a file route, create a bean annotated with `@PageLoader`:
-
-```java
-@PageLoader("/tasks/{id}")
-public class TaskDetailPageLoader implements PageDataLoader {
-
-    @Autowired private TaskRepository taskRepository;
-
-    @Override
-    public Map<String, Object> load(HttpServletRequest request) {
-        return Map.of("taskDetails", taskRepository.findDetails());
-    }
-}
-```
-
 ---
 
-## ⚡ Spring Boot MVC Integration
+## 📖 3. Template Syntax Made Simple
 
-Or use standard Spring `@Controller` classes with `PipedTemplateViewResolver`:
-
-```java
-@Controller
-public class HomeController {
-
-    @GetMapping("/")
-    public String index(Model model) {
-        model.addAttribute("title", "Dashboard");
-        model.addAttribute("user", new User("Alice"));
-        return "pages/index"; // Resolves to pte-templates/pages/index.pte
-    }
-}
-```
-
----
-
-## 📖 Syntax & Directives Reference
-
-### Output & Escaping Modes
-
+### 1. Variables & Safe Formatting
 ```html
-|user.name|                     <!-- Default HTML Escaped -->
-|html user.bio|                 <!-- Trusted Raw HTML -->
-|attr user.role|                <!-- Attribute Escaped -->
-|json user.settings|            <!-- JSON Encoded -->
-|url user.website|              <!-- URL Encoded -->
+|user.name|                  <!-- Displays text safely -->
+|html user.bio|              <!-- Allows trusted raw HTML -->
+|title, slug|                <!-- Turns 'Hello World!' into 'hello-world' -->
+|name, upper|                <!-- Turns 'john' into 'JOHN' -->
 ```
 
-### Text Filters & Slug Generation 🔗
-
-PTE includes built-in text transformation filters for SEO-friendly URLs and HTMX DOM IDs:
-
+### 2. Default Values & Optional Chaining
 ```html
-<!-- SEO-Friendly Clean URLs for SvelteKit Routes (/blog/[slug]) -->
-<a href="/blog/|post.title, slug|">|post.title|</a>
-<!-- 'Hello World & Welcome!' -> 'hello-world-welcome' -->
+<!-- If user.profile is missing, fallback to 'Guest' -->
+<p>Welcome, |user?.profile?.name ?? 'Guest'|</p>
 
-<!-- Safe HTMX Target DOM IDs -->
-<li id="task-|task.title, slug|">|task.title|</li>
-<!-- 'Buy Groceries & Milk' -> 'task-buy-groceries-milk' -->
-
-<!-- Chained Text Filters -->
-<p>|user.name, trim, lower, capitalize|</p>
+<!-- Ternary IF/ELSE inside attributes -->
+<span class="|completed ? 'done' : 'pending'|">Status</span>
 ```
 
-### Operators & Null Safety
-
-```html
-<!-- Optional Chaining & Null Coalescing -->
-<p>User: |user?.profile?.name ?? 'Anonymous'|</p>
-
-<!-- Ternary Operator -->
-<span class="|completed ? 'is-done' : 'is-pending'|">Status</span>
-
-<!-- Conditional Attributes -->
-<input type="checkbox" |attr checked if completed|>
-```
-
-### Conditionals (`|if|`)
-
+### 3. If / Else Conditionals
 ```html
 |if user.loggedIn|
     <p>Welcome back, |user.name|!</p>
-|else if user.isGuest|
-    <p>Welcome, Guest!</p>
 |else|
     <p>Please log in.</p>
 |/if|
 ```
 
-### Loops (`|each|`)
-
+### 4. Loops
 ```html
 <ul>
 |each item in items|
@@ -174,9 +108,9 @@ PTE includes built-in text transformation filters for SEO-friendly URLs and HTMX
 </ul>
 ```
 
-### Layouts & Sections
+### 5. Layouts (Reusing Headers & Footers)
 
-`layouts/main.pte`:
+`layouts/main.pte` (The Master Template):
 ```html
 <!DOCTYPE html>
 <html>
@@ -189,47 +123,49 @@ PTE includes built-in text transformation filters for SEO-friendly URLs and HTMX
 </html>
 ```
 
-`pages/index.pte`:
+`pages/index.pte` (The Page Template):
 ```html
 |layout layouts/main|
 
-|section title| Home Page |/section|
+|section title| My Website |/section|
 
 |section content|
-    <h1>Welcome to the App</h1>
+    <h1>Hello World!</h1>
 |/section|
 ```
 
 ---
 
-## 🏎️ Performance & Benchmarks
+## 🍃 4. Standard Spring Boot Controllers
 
-Piped Template Engine uses a **Bytecode Generator** (`com.piped.template.engine.codegen`) that compiles AST nodes directly into JVM bytecode classes in memory (`javax.tools.JavaCompiler`).
+You can also use standard `@Controller` annotations if you prefer:
 
-| Metric | Thymeleaf | Piped Engine (CodeGen) | JTE |
-| :--- | :--- | :--- | :--- |
-| **Parsing Strategy** | HTML DOM Attoparser | In-Memory Bytecode CodeGen | Java Compiler CodeGen |
-| **Expression Engine** | Spring EL (SpEL) | Native MethodHandles | Direct Java Getters |
-| **Runtime Throughput** | ~10,000 ops/sec | **~80,000+ ops/sec** | ~80,000+ ops/sec |
-| **Memory Allocations** | High (DOM Node copies) | **Zero (Direct char[] stream)** | Zero |
+```java
+@Controller
+public class HomeController {
+
+    @GetMapping("/")
+    public String home(Model model) {
+        model.addAttribute("title", "Welcome Page");
+        return "pages/index"; // Opens src/main/resources/pte-templates/pages/index.pte
+    }
+}
+```
 
 ---
 
-## 🎨 Demo App: TaskMaster
+## 🎨 5. Demo Application (TaskMaster)
 
-The repository includes `task-master`, an interactive TODO web application demonstrating:
-- Spring Boot + Piped Template Engine Starter.
-- Bulma CSS + Material Design theme.
-- HTMX out-of-band dashboard statistics updating in real time.
+This repository includes `task-master`, a complete sample TODO app built with Spring Boot, Bulma CSS, Material Design, and HTMX.
 
-Run it locally:
+To run the demo app locally:
 ```bash
 ./gradlew :task-master:bootRun
 ```
-Navigate to `http://localhost:8080`.
+Then open your browser to `http://localhost:8080`.
 
 ---
 
 ## 📄 License
 
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **MIT License**.
