@@ -395,3 +395,19 @@ templateEngine.setMinify(true);
 // Globally format/indent HTML output
 templateEngine.setPrettify(true);
 ```
+
+---
+
+### 24. Template Comments
+Write developer comments inside templates that are completely stripped out at compile time and never outputted to the user's browser.
+
+```html
+<!-- Single-line comment -->
+|# This comment will not render |
+
+<!-- Multi-line block comment -->
+|# 
+   This is a block comment.
+   It spans multiple lines.
+#|
+```
