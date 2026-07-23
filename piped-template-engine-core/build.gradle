@@ -3,7 +3,7 @@ plugins {
 }
 
 application {
-    mainClass = 'io.succinct.piped.template.engine.Main'
+    mainClass = 'io.lemadane.piped.template.engine.Main'
 }
 
 dependencies {
